@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <title>Dashboard</title>
+
+  <style>
+    body {
+      margin: 0;
+      font-family: Inter, Arial;
+      background: linear-gradient(135deg, #0f172a, #111827);
+      color: white;
+    }
+
+    .sidebar {
+      position: fixed;
+      width: 240px;
+      height: 100vh;
+      background: rgba(17, 24, 39, 0.8);
+      backdrop-filter: blur(12px);
+      padding: 25px;
+      border-right: 1px solid rgba(255,255,255,0.05);
+    }
+
+    .sidebar h2 {
+      color: #3b82f6;
+    }
+
+    .sidebar a {
+      display: block;
+      color: white;
+      text-decoration: none;
+      margin: 15px 0;
+      opacity: 0.8;
+      cursor: pointer;
+    }
+
+    .sidebar a:hover {
+      opacity: 1;
+    }
+
+    .main {
+      margin-left: 240px;
+      padding: 20px;
+    }
+
+    .cards {
+      display: flex;
+      gap: 15px;
+    }
+
+    .card {
+      flex: 1;
+      background: rgba(31, 41, 55, 0.6);
+      backdrop-filter: blur(10px);
+      padding: 20px;
+      border-radius: 16px;
+      border: 1px solid rgba(255,255,255,0.05);
+      transition: 0.3s;
+    }
+
+    .card:hover {
+      transform: translateY(-3px);
+    }
+
+    .card h3 {
+      margin: 0;
+      color: #93c5fd;
+    }
+
+    .card p {
+      font-size: 22px;
+      margin-top: 10px;
+    }
+
+    table {
+      width: 100%;
+      margin-top: 30px;
+      border-collapse: collapse;
+      background: rgba(31, 41, 55, 0.6);
+      backdrop-filter: blur(10px);
+      border-radius: 14px;
+      overflow: hidden;
+    }
+
+    th, td {
+      padding: 12px;
+      text-align: left;
+      border-bottom: 1px solid #374151;
+    }
+
+    th {
+      background: #111827;
+    }
+
+    button {
+      padding: 7px 12px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      background: linear-gradient(135deg, #ef4444, #dc2626);
+      color: white;
+      transition: 0.2s;
+    }
+
+  button:hover {
+    transform: scale(1.05);
+  }
+
+  </style>
+</head>
+
+<body onload="verificarLogin(); carregarClientes();">
+
+  <div class="sidebar">
+    <h2>Painel</h2>
+    <a>Dashboard</a>
+    <a>Clientes</a>
+    <a>Projetos</a>
+    <a onclick="logout()">Sair</a>
+  </div>
+
+  <div class="main">
+
+    <div class="cards">
+      <div class="card">
+        <h3>Clientes</h3>
+        <p id="totalClientes">0</p>
+      </div>
+
+      <div class="card">
+        <h3>Projetos</h3>
+        <p>5</p>
+      </div>
+
+      <div class="card">
+        <h3>Status</h3>
+        <p>Ativo</p>
+      </div>
+    </div>
+
+    <h2 style="margin-top:30px;">Clientes</h2>
+
+    <table>
+      <thead>
+        <tr>
+          <th>Nome</th>
+          <th>Ação</th>
+        </tr>
+      </thead>
+
+      <tbody id="tabelaClientes"></tbody>
+    </table>
+
+  </div>
+
+  <script>
+    function verificarLogin() {
+      const token = localStorage.getItem("token");
+
+      if (!token) {
+        window.location.href = "login.html";
+      }
+    }
+
+    function logout() {
+      localStorage.removeItem("token");
+      window.location.href = "login.html";
+    }
+
+    async function carregarClientes() {
+      try {
+        const token = localStorage.getItem("token");
+
+        const res = await fetch("http://localhost:3000/clientes", {
+          headers: {
+            "Authorization": "Bearer " + token
+          }
+        });
+
+        if (res.status === 401 || res.status === 403) {
+          localStorage.removeItem("token");
+          window.location.href = "login.html";
+          return;
+        }
+
+        const data = await res.json();
+
+        document.getElementById("totalClientes").innerText = data.length;
+
+        const tabela = document.getElementById("tabelaClientes");
+
+        tabela.innerHTML = data.map(c => `
+          <tr>
+            <td>${c.nome}</td>
+            <td><button onclick="deletar('${c._id}')">Excluir</button></td>
+          </tr>
+        `).join("");
+
+      } catch (err) {
+        console.log("Erro ao carregar clientes", err);
+      }
+    }
+
+    async function deletar(id) {
+      const token = localStorage.getItem("token");
+
+      await fetch(`http://localhost:3000/clientes/${id}`, {
+        method: "DELETE",
+        headers: {
+          "Authorization": "Bearer " + token
+        }
+      });
+
+      carregarClientes();
+    }
+  </script>
+
+</body>
+</html>
