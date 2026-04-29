@@ -10,17 +10,22 @@ const SECRET = process.env.JWT_SECRET || "minha-chave-secreta";
 app.use(cors());
 app.use(express.json());
 
-mongoose.connect("mongodb+srv://PyetroNatalino:%40Estarossa04@cluster0.je8c2ih.mongodb.net/painel")
+// ✅ conexão Mongo corrigida
+mongoose.connect(process.env.MONGO_URL, {
+  useNewUrlParser: true,
+  useUnifiedTopology: true
+})
   .then(() => console.log("MongoDB conectado"))
-  .catch(err => console.log(err));
+  .catch(err => console.log("Erro Mongo:", err));
 
+// ✅ Schema
 const ClienteSchema = new mongoose.Schema({
   nome: String
 });
 
 const Cliente = mongoose.model("Cliente", ClienteSchema);
 
-
+// ✅ LOGIN
 app.post("/auth/login", (req, res) => {
   const { email, password } = req.body;
 
@@ -37,7 +42,7 @@ app.post("/auth/login", (req, res) => {
   return res.status(401).json({ message: "Login inválido" });
 });
 
-
+// ✅ middleware JWT
 function autenticarToken(req, res, next) {
   const authHeader = req.headers["authorization"]; 
 
@@ -56,6 +61,7 @@ function autenticarToken(req, res, next) {
   }
 }
 
+// ✅ rotas
 app.get("/clientes", autenticarToken, async (req, res) => {
   const clientes = await Cliente.find();
   res.json(clientes);
@@ -72,12 +78,9 @@ app.delete("/clientes/:id", autenticarToken, async (req, res) => {
   res.send("ok");
 });
 
-app.listen(3000, () => {
-  console.log("Servidor rodando na porta 3000");
-});
-
+// ✅ porta correta (Render)
 const PORT = process.env.PORT || 3000;
 
 app.listen(PORT, () => {
-  console.log("Servidor rodando na porta" + PORT);
+  console.log("Servidor rodando na porta " + PORT);
 });
