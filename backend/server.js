@@ -11,7 +11,7 @@ app.use(cors());
 app.use(express.json());
 
 // ✅ conexão Mongo corrigida
-mongoose.connect(process.env.MONGO_URL, {
+mongoose.connect("mongodb+srv://PyetroNatalino:04092008@cluster0.je8c2ih.mongodb.net/painel?retryWrites=true&w=majority", {
   useNewUrlParser: true,
   useUnifiedTopology: true
 })
